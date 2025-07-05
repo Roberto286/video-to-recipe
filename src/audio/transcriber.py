@@ -13,5 +13,5 @@ def transcribe_audio(audio_path: str, output_path="files/transcriptions") -> str
     Returns:
         str: Transcribed text from the audio.
     """
-    result = model.transcribe(audio_path)
+    result = model.transcribe(audio_path, temperature=0.1)
     return result["text"]
