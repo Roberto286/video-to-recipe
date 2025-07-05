@@ -2,7 +2,7 @@ import yt_dlp
 import os
 
 
-def download_video(url, output_path="downloads") -> dict:
+def download_video(url, output_path="downloads/videos") -> dict:
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
@@ -15,11 +15,11 @@ def download_video(url, output_path="downloads") -> dict:
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
-            ydl.download([url])
-            info = ydl.extract_info(url, download=False)
+            info = ydl.extract_info(url, download=True)
             metadata = extract_metadata(info)
-
-            return {"status": "success", "metadata": metadata}
+            # Get the output file path
+            filename = ydl.prepare_filename(info)
+            return {"status": "success", "metadata": metadata, "filepath": filename}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 

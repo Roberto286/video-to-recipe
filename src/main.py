@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from video.downloader import download_video
+from video.processor import extract_audio_from_video
 
 app = Flask(__name__)
 
@@ -17,11 +18,17 @@ def recipe():
     recipe_url = data.get("url")
     if not recipe_url:
         return jsonify({"error": "URL is required"}), 400
-    metadata = download_video(recipe_url)["metadata"]
+    info = download_video(recipe_url)
+    metadata, filepath = info["metadata"], info["filepath"]
     title, description = metadata["title"], metadata["description"]
-
+    extract_audio_from_video(filepath)
     return jsonify(
-        {"message": "Url received", "title": title, "description": description}
+        {
+            "message": "Url received",
+            "title": title,
+            "description": description,
+            "filepath": filepath,
+        }
     ), 200
 
 
