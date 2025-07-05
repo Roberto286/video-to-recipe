@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+from audio.transcriber import transcribe_audio
 from video.downloader import download_video
 from video.processor import extract_audio_from_video
 
@@ -21,13 +22,16 @@ def recipe():
     info = download_video(recipe_url)
     metadata, filepath = info["metadata"], info["filepath"]
     title, description = metadata["title"], metadata["description"]
-    extract_audio_from_video(filepath)
+    audio_file_path = extract_audio_from_video(filepath)
+    transcribed_audio = transcribe_audio(audio_file_path)
     return jsonify(
         {
             "message": "Url received",
             "title": title,
             "description": description,
             "filepath": filepath,
+            "transcribed_audio": transcribed_audio,
+            "audio_file_path": audio_file_path,
         }
     ), 200
 

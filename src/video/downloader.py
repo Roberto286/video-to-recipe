@@ -2,7 +2,7 @@ import yt_dlp
 import os
 
 
-def download_video(url, output_path="downloads/videos") -> dict:
+def download_video(url, output_path="files/videos") -> dict:
     if not os.path.exists(output_path):
         os.makedirs(output_path)
 
