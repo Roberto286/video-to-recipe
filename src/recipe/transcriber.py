@@ -2,29 +2,27 @@ from llama_cpp import Llama
 import os
 
 model = Llama(
-    model_path="./models/Llama-3.2-3B-Instruct-Q4_0.gguf",
-    n_ctx=2048,  # lunghezza massima del contesto
-    n_threads=4,  # adattalo alla tua CPU
+    model_path="./models/mistral-7b-instruct-v0.2.Q4_0.gguf",
+    n_ctx=4096,
+    n_threads=8,
 )
 
 messages = [
     {
         "role": "system",
-        "content": """Sei un assistente specializzato nella creazione di ricette culinarie. Il tuo compito è trasformare trascrizioni di video di ricette in ricette complete e ben strutturate in formato Markdown.
+        "content": """Sei un assistente specializzato nella scrittura di ricette di cucina. Scrivi sempre in **italiano**. Il tuo compito è trasformare una trascrizione in una **ricetta completa e ben formattata** in **Markdown**.
 
-## ISTRUZIONI GENERALI:
-- La trascrizione che ricevi proviene da un video e potrebbe contenere piccoli errori di riconoscimento vocale
-- Correggi automaticamente errori evidenti (es. "200 grammi di aqua" → "200 ml di acqua")
-- Se una quantità o ingrediente non è chiaro, usa il tuo buon senso culinario per stimare
-- Mantieni SEMPRE la struttura Markdown fornita
-- Sii preciso con tempi, temperature e quantità
-- Scrivi in modo chiaro e comprensibile per tutti i livelli di esperienza
-- Non aggiungere informazioni non presenti nella trascrizione
-- Riceverai una trascrizione e la descrizione del video, da cui potrai estrarre il titolo e la descrizione della ricetta
-- Non usare abbreviazioni, scrivi sempre "minuti" e "grammi" per esteso
+## Regole da seguire:
+- Scrivi solo in **italiano**
+- Correggi errori evidenti nel testo (es. "aqua" → "acqua", "olivetta giasche" → "olive taggiasche")
+- Se un ingrediente o quantità è incompleto, **stima con buon senso**
+- Non aggiungere nulla che non sia nella trascrizione o descrizione
+- Scrivi in modo chiaro, semplice e preciso (anche per chi cucina poco)
+- Usa sempre **"minuti"**, **"grammi"**, **"ml"**, **"°C"** (niente abbreviazioni)
+- Segui sempre e solo lo **schema Markdown** qui sotto
+- **Non usare altri formati**
 
-## FORMATO OBBLIGATORIO:
-Usa ESATTAMENTE questo schema Markdown:
+## Schema obbligatorio:
 
 ```markdown
 # [NOME RICETTA]
@@ -43,34 +41,29 @@ Usa ESATTAMENTE questo schema Markdown:
 ## 🥘 Ingredienti
 - [quantità precisa] [ingrediente]
 - [quantità precisa] [ingrediente]
-[...continua per tutti gli ingredienti]
 
 ## 🔧 Strumenti necessari
 - [strumento 1]
 - [strumento 2]
-[...se necessari]
 
 ## 📋 Procedimento
 
 ### Fase 1: Preparazione
-1. **[Azione specifica]** - [dettagli con tempi/temperature se necessari]
-2. **[Azione specifica]** - [dettagli con tempi/temperature se necessari]
+1. **[Azione specifica]** - [dettagli]
 
 ### Fase 2: Cottura
 1. **[Azione specifica]** - [Temperatura: X°C, Tempo: X minuti]
-2. **[Azione specifica]** - [dettagli specifici]
 
 ### Fase 3: Finalizzazione
-1. **[Azione specifica]** - [dettagli finali]
-2. **[Presentazione]** - [come servire/presentare]
+1. **[Azione specifica]** - [come servire o completare]
 
 ## 💡 Consigli
-- [Consiglio pratico 1]
-- [Consiglio pratico 2]
-- [Variante o sostituzione se pertinente]
+- [Consiglio utile]
+- [Variante o sostituzione]
 
 ## 🏷️ Tag
-`[categoria]` `[difficoltà]` `[tipo-cottura]` `[tempo-preparazione]`""",
+`[categoria]` `[difficoltà]` `[tipo-cottura]` `[tempo-preparazione]`
+""",
     }
 ]
 
@@ -95,17 +88,25 @@ def transcribe_recipe(
     messages.append(
         {
             "role": "user",
-            "content": "trascrizione del video:"
-            + transcription
-            + "descrizione del video:"
-            + description,
+            "content": f"""Questa è la descrizione del video:
+
+            {description}
+
+            ---
+
+            E questa è la trascrizione dell'audio del video:
+
+            {transcription}
+
+            ---
+
+            Genera la ricetta completa in italiano, seguendo **esattamente** lo schema Markdown indicato nelle istruzioni di sistema. Non aggiungere nulla che non sia nella trascrizione o nella descrizione. Se mancano quantità o dettagli, stima in modo realistico. Non aggiungere altro che il codice markdown alla risposta, senza commenti o spiegazioni.""",
         }
     )
 
     response = model.create_chat_completion(
         messages=messages,
-        max_tokens=256,
-        temperature=0.7,
+        temperature=0.3,
     )
 
     print(response["choices"][0]["message"]["content"])

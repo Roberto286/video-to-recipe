@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 from audio.transcriber import transcribe_audio
 from recipe.transcriber import transcribe_recipe
+from text.processor import correct_transcription
 from video.downloader import download_video
 from video.processor import extract_audio_from_video
 
@@ -25,7 +26,12 @@ def recipe():
     title, description = metadata["title"], metadata["description"]
     audio_file_path = extract_audio_from_video(filepath)
     transcription = transcribe_audio(audio_file_path)
+    corrected_transcription = correct_transcription(transcription)
     recipe = transcribe_recipe(transcription, description)
+    if not recipe:
+        return jsonify({"error": "Failed to transcribe recipe"}), 500
+    with open("files/recipes/recipe.txt", "w") as f:
+        f.write(recipe)
     return jsonify(
         {
             "message": "Url received",
